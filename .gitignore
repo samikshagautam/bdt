@@ -1,0 +1,6 @@
+target
+.idea
+hbase-2.4.6
+hbase-docker
+src/main/resources/dataset-sample.csv
+flume

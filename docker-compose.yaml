@@ -1,0 +1,75 @@
+version: "3.2"
+
+services:
+#  bdt-hbase:
+#    image: dajobe/hbase
+#    container_name: bdt-hbase
+#    restart: always
+#    environment:
+#      HBASE_DOCKER_HOSTNAME: hbase-docker
+#    ports:
+#      - "9090:9090"
+#      - "9095:9095"
+#      - "8080:8080"
+#      - "8085:8085"
+#      - "3181:2181"
+#      - "16000:16000"
+#      - "16010:16010"
+#      - "16020:16020"
+#    volumes:
+#      - ./src/main/resources/data:/data/dajobe/hbase
+#    networks:
+#      - bdt
+
+  bdt-zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: bdt-zookeeper
+    restart: always
+    volumes:
+      - type: bind
+        source: ./src/main/resources/zookeeper.properties
+        target: /conf/zoo.cfg
+      - type: bind
+        source: ./src/main/resources/data
+        target: /data
+    ports:
+      - "2181:2181"
+    networks:
+      - bdt
+
+  bdt-kafka:
+    container_name: bdt-kafka
+    image: wurstmeister/kafka
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: bdt-zookeeper:2181
+      KAFKA_ADVERTISED_HOST_NAME: bdt-kafka
+      KAFKA_CREATE_TOPICS: NotificationTopic:1:1
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://host.docker.internal:9094
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+    ports:
+      - "9094:9094"
+    depends_on:
+      - bdt-zookeeper
+    networks:
+      - bdt
+
+#  bdt-flume:
+#    container_name: bdt-flume
+#    image: elek/flume
+#    environment:
+#      FLUME_CONF_DIR: /opt/flume/conf
+#      FLUME_NAME: a1
+#      FLUME_CONFIG_FILE: /opt/flume/conf/flume-conf.properties
+#    volumes:
+#      - ./src/main/resources/flume-conf.properties:/opt/flume/conf/flume-conf.properties
+#      - ./src/main/resources/dataset.csv:/opt/data/dataset.csv
+#    depends_on:
+#      - bdt-kafka
+#    networks:
+#      - bdt
+
+networks:
+  bdt:
+    driver: bridge
